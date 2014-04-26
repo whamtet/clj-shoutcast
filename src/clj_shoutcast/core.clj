@@ -13,7 +13,8 @@
    javazoom.spi.mpeg.sampled.file.MpegAudioFileReader
    javax.sound.sampled.AudioSystem
    javazoom.spi.mpeg.sampled.file.tag.TagParseListener
-   ))
+   )
+  (:require [clj-shoutcast.recorder :as recorder]))
 
 (def url (URL. "http://server1.chilltrax.com:9000/"))
 (def icy-header (slurp "header.txt"))
@@ -105,17 +106,23 @@
         ]
     (println (str (.getName t) ": " (.getValue t)))))
 
+(defn tag-parse-listener [player gain-f]
+  (reify TagParseListener
+    (tagParsed [this tag-parse-event]
+      (.setGain player (gain-f))
+      (print-tag-parse-event tag-parse-event))))
+
 (defn get-player [gain-f]
-  (proxy [BasicPlayer TagParseListener] []
+  (doto
+  (proxy [BasicPlayer] []
     (initAudioInputStream
      [url]
       (let [{:keys [in format iis]} (workaround url)]
-        (.addTagParseListener iis this)
+        (.addTagParseListener iis (tag-parse-listener this gain-f))
+        (.addTagParseListener iis (recorder/tag-parse-listener this))
         (proxy-super setDouble in format)))
-    (tagParsed [tag-parse-event]
-      (proxy-super setGain (gain-f))
-      (print-tag-parse-event tag-parse-event))
-     ))
+     )
+    (.addBasicPlayerListener recorder/recorder)))
 
 (defn boost-bass [player]
   (let [
@@ -123,3 +130,7 @@
         ]
     (doseq [i (range 32)]
       (aset eq i (float (- 1 (/ (* i 2) 32.)))))))
+
+;(def player (get-player #(identity 0.5)))
+;(doto player (.open url) .play (.setGain 0.5))
+;(.stop player)
