@@ -99,12 +99,13 @@
      :iis stream}
     ))
 
-(defn print-tag-parse-event [tag-parse-event] (-> tag-parse-event .getTag println))
-
-(defn get-player []
+(defn print-tag-parse-event [tag-parse-event]
   (let [
-        icy-input-stream (atom nil)
-        ])
+        t (.getTag tag-parse-event)
+        ]
+    (println (str (.getName t) ": " (.getValue t)))))
+
+(defn get-player [gain-f]
   (proxy [BasicPlayer TagParseListener] []
     (initAudioInputStream
      [url]
@@ -112,8 +113,13 @@
         (.addTagParseListener iis this)
         (proxy-super setDouble in format)))
     (tagParsed [tag-parse-event]
-      (proxy-super setGain 1)
+      (proxy-super setGain (gain-f))
       (print-tag-parse-event tag-parse-event))
      ))
 
-;(def player (doto (get-player) (.open url) .play))
+(defn boost-bass [player]
+  (let [
+        eq (-> player .getAudioInputStream .properties (get "mp3.equalizer"))
+        ]
+    (doseq [i (range 32)]
+      (aset eq i (float (- 1 (/ (* i 2) 32.)))))))
