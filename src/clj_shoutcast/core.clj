@@ -125,3 +125,5 @@
 ;(def player (get-player #(identity 0.5)))
 ;(doto player (.open url) .play (.setGain 0.5))
 ;(.stop player)
+;(.setGain player 0.3)
+

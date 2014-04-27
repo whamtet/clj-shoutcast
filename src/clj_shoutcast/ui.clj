@@ -14,9 +14,10 @@
     (println "playing...")
     (while true
       (print "=>")
+      (.flush *out*)
       (let [
             input (.trim (read-line))
-            val (try (Integer/parseInt input) (catch NumberFormatException e))
+            val (try (Double/parseDouble input) (catch NumberFormatException e))
             ]
         (if val
           (do (.setGain player (/ val 9)) (reset! curr-vol (/ val 9)))
@@ -25,5 +26,6 @@
             "p" (.pause player)
             "s" (.setGain player 0); mutes player, on next song player will resume previous volume
             "save" (do (println "saving...") (reset! recorder/save? true))
-            nil
+            "cancel" (do (println "cancelling save...") (reset! recorder/save? false))
+            (println "command not recognized")
             ))))))

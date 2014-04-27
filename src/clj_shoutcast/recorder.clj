@@ -11,11 +11,13 @@
 (def save-dir (doto (java.io.File. "songs") .mkdir))
 
 (defn save-file [player name os]
+  (println "writing song" name)
   (let [
         audio-format (-> player .getAudioInputStream .getFormat)
         bytes (.toByteArray os)
         stream (java.io.ByteArrayInputStream. bytes)
-        audio-input-stream (AudioInputStream. stream audio-format (alength bytes))
+        num-frames (/ (alength bytes) (.getFrameSize audio-format))
+        audio-input-stream (AudioInputStream. stream audio-format num-frames)
         out-file (java.io.File. save-dir (str (.trim name) ".wav"))
         ]
     (AudioSystem/write audio-input-stream wave-audio-file-type out-file)
@@ -29,7 +31,7 @@
 (def recorder
     (reify
       BasicPlayerListener
-      (opened [this _ _])
+      (opened [this _ properties])
       (progress [this bytes-read microseconds pcm props] (.write os pcm))
       (stateUpdated [this _])
       (setController [this _])
