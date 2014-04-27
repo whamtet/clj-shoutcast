@@ -23,7 +23,7 @@
           (condp = input
             "r" (.resume player)
             "p" (.pause player)
-            "s" (.setGain player 0)
+            "s" (.setGain player 0); mutes player, on next song player will resume previous volume
             "save" (do (println "saving...") (reset! recorder/save? true))
             nil
             ))))))

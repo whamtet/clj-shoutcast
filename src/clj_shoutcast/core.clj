@@ -19,15 +19,7 @@
 (def url (URL. "http://server1.chilltrax.com:9000/"))
 (def icy-header (slurp "header.txt"))
 
-(comment m_audioInputStream = typedAudioStream.audioInputStream
-    m_audioFileFormat = typedAudioStream.audioFileFormat match {
-      case Some(f) => f
-      case None => throw new UnsupportedAudioFileException("stream is not a supported file type")
-    }
-    guessedType = typedAudioStream.guessedAudioCodec
-    )
-
-(def formats #{:RAW_AAC :MP4_AAC :NATIVE_FLAC :OGG_VORBIS :NATIVE_MP3})
+;(def formats #{:RAW_AAC :MP4_AAC :NATIVE_FLAC :OGG_VORBIS :NATIVE_MP3})
 
 (defn mime->format [mime]
   (cond
@@ -87,7 +79,6 @@
   (let [
        socket (Socket. (.getHost url) (.getPort url))
        os (.getOutputStream socket)
-       path (.getPath url)
        _ (.write os (.getBytes icy-header))
        buffered-input-stream (BufferedInputStream. (.getInputStream socket))
        stream (IcyInputStream. buffered-input-stream)
@@ -96,7 +87,7 @@
        forced-format (read-and-reset buffered-input-stream 1000
                                      (fn [in] (audio-file-format in stream-format)))
        ]
-    {:codec stream-format :in (audio-input-stream stream stream-format) :format forced-format
+    {:in (audio-input-stream stream stream-format) :format forced-format
      :iis stream}
     ))
 

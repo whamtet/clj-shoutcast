@@ -29,11 +29,8 @@
 (def recorder
     (reify
       BasicPlayerListener
-      (opened [this _ properties]
-       )
-      (progress [this bytes-read microseconds pcm props]
-        (.write os pcm)
-                )
+      (opened [this _ _])
+      (progress [this bytes-read microseconds pcm props] (.write os pcm))
       (stateUpdated [this _])
       (setController [this _])
       ))
@@ -50,7 +47,7 @@
           (when (and @save? @curr-name)
             (reset! save? false)
             (save-file player @curr-name os)
-            (.reset os)
             )
+          (.reset os)
           (reset! curr-name (.getValue t))
           )))))
