@@ -97,10 +97,12 @@
         ]
     (println (str (.getName t) ": " (.getValue t)))))
 
+(def hard-mute? (atom false))
+
 (defn tag-parse-listener [player]
   (reify TagParseListener
     (tagParsed [this tag-parse-event]
-      (.setMute player false)
+      (if-not @hard-mute? (.setMute player false))
       (print-tag-parse-event tag-parse-event))))
 
 (defn get-player []
@@ -118,7 +120,7 @@
 (defn boost-bass [player]
   (let [
         eq (.getEQ player)
-        f #(- 0.2 (* % 0.02))
+        f #(- 0.3 (* % 0.03))
         ]
     (doseq [i (range 10)]
       (.setBandValue eq i 0 (f i))
