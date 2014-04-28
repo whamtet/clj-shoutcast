@@ -27,5 +27,6 @@
             "s" (.setGain player 0); mutes player, on next song player will resume previous volume
             "save" (do (println "saving...") (reset! recorder/save? true))
             "cancel" (do (println "cancelling save...") (reset! recorder/save? false))
+            "size" (-> recorder/os .size println)
             (println "command not recognized")
             ))))))
