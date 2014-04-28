@@ -97,19 +97,19 @@
         ]
     (println (str (.getName t) ": " (.getValue t)))))
 
-(defn tag-parse-listener [player gain-f]
+(defn tag-parse-listener [player]
   (reify TagParseListener
     (tagParsed [this tag-parse-event]
-      (.setGain player (gain-f))
+      (.setMute player false)
       (print-tag-parse-event tag-parse-event))))
 
-(defn get-player [gain-f]
+(defn get-player []
   (doto
   (proxy [BasicPlayer] []
     (initAudioInputStream
      [url]
       (let [{:keys [in format iis]} (workaround url)]
-        (.addTagParseListener iis (tag-parse-listener this gain-f))
+        (.addTagParseListener iis (tag-parse-listener this))
         (.addTagParseListener iis (recorder/tag-parse-listener this))
         (proxy-super setDouble in format)))
      )
@@ -117,13 +117,20 @@
 
 (defn boost-bass [player]
   (let [
-        eq (-> player .getAudioInputStream .properties (get "mp3.equalizer"))
+        eq (.getEQ player)
+        f #(- 0.2 (* % 0.02))
         ]
-    (doseq [i (range 32)]
-      (aset eq i (float (- 1 (/ (* i 2) 32.)))))))
+    (doseq [i (range 10)]
+      (.setBandValue eq i 0 (f i))
+      (.setBandValue eq i 1 (f i))
+      )))
 
-;(def player (get-player #(identity 0.5)))
+;(def player (get-player))
 ;(doto player (.open url) .play (.setGain 0.5))
 ;(.stop player)
-;(.setGain player 0.3)
+;(def EQ (.getEQ player))
+;(.getBandValue EQ 0 0)
+;(doseq [i (range 10)] (.setBandValue EQ i 0 1))
 
+(defn -main [& args]
+  (doto (get-player) (.open url) .play (.setGain 0.5)))

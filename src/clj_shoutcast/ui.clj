@@ -7,10 +7,9 @@
 
 (defn -main [& args]
   (let [
-        curr-vol (atom 0.5)
-        player (core/get-player #(deref curr-vol))
+        player (core/get-player)
         ]
-    (doto player (.open url) .play (.setGain @curr-vol) core/boost-bass)
+    (doto player (.open url) .play (.setGain 0.2) core/boost-bass)
     (println "playing...")
     (while true
       (print "=>")
@@ -20,11 +19,11 @@
             val (try (Double/parseDouble input) (catch NumberFormatException e))
             ]
         (if val
-          (do (.setGain player (/ val 9)) (reset! curr-vol (/ val 9)))
+          (.setGain player (/ val 9))
           (condp = input
             "r" (.resume player)
             "p" (.pause player)
-            "s" (.setGain player 0); mutes player, on next song player will resume previous volume
+            "m" (.toggleMute player)
             "save" (do (println "saving...") (reset! recorder/save? true))
             "cancel" (do (println "cancelling save...") (reset! recorder/save? false))
             "size" (-> recorder/os .size println)

@@ -14,7 +14,7 @@
                  [self/mp3spi "1.9.4"]
                  [self/tritonus_share "0.3.6.1"]
                  [self/vorbisspi "1.0.3"]
-
+                 [whamtet/jeq "1.01"]
                  ]
   :repositories [["repo" {:url "http://eclipse-repo.appspot.com/repo"
                           :checksum :ignore}
