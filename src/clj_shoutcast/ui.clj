@@ -16,7 +16,7 @@
   (list* "open" (map #(.getPath %) (get-songs))))
 
 (defn get-song [prefix]
-  (some #(if (.startsWith (.getName %) prefix) %) (get-songs)))
+  (some #(if (.startsWith (.toLowerCase (.getName %)) prefix) %) (get-songs)))
 
 (defn open [command player]
   (let [
@@ -30,8 +30,21 @@
 
 (defn ls []
   (println "***saved songs***")
-  (println (apply str (interpose "\n" (map #(.getName %) (get-songs))))))
+  (println (apply str (interpose "\n" (map #(.getName %) (get-songs)))))
+  (println "***"))
 
+(defn rm [command]
+  (when-let [song (get-song (second (.split command " ")))]
+    (println (format "Delete %s? " (.getName song)))
+    (.flush *out*)
+    (if (= "y" (.trim (read-line))) (.delete song))))
+
+(let [
+      command "rm A"
+      [_ prefix] (.split command " ")
+      song (get-song prefix)
+      ]
+  song)
 
 (defn -main [& args]
   (let [
@@ -45,6 +58,7 @@
       (let [
             input (-> (read-line) .trim .toLowerCase)
             val (try (Double/parseDouble input) (catch NumberFormatException e))
+            starts-with? (fn [a b] (.startsWith b a))
             ]
         (if val
           (.setGain player (/ val 9))
@@ -56,7 +70,8 @@
             "cancel" (do (println "cancelling save...") (reset! recorder/save? false))
             "size" (-> recorder/os .size println)
             "ls" (ls)
-            (if (.startsWith input "open")
-              (open input player)
+            (condp starts-with? input
+              "rm" (rm input)
+              "open" (open input player)
               (println "command not recognized"))
             ))))))
