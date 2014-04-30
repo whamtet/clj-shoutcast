@@ -105,7 +105,7 @@
       (if-not @hard-mute? (.setMute player false))
       (print-tag-parse-event tag-parse-event))))
 
-(defn get-player []
+(defn get-player [& tag-listeners]
   (doto
   (proxy [BasicPlayer] []
     (initAudioInputStream
@@ -113,6 +113,8 @@
       (let [{:keys [in format iis]} (workaround url)]
         (.addTagParseListener iis (tag-parse-listener this))
         (.addTagParseListener iis (recorder/tag-parse-listener this))
+        (doseq [tag-listener tag-listeners]
+          (.addTagParseListener iis tag-listener))
         (proxy-super setDouble in format)))
      )
     (.addBasicPlayerListener recorder/recorder)))

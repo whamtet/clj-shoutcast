@@ -19,5 +19,7 @@
   :repositories [["repo" {:url "http://eclipse-repo.appspot.com/repo"
                           :checksum :ignore}
                           ]]
+  :java-source-paths ["java-src"]
+  :resource-paths ["resources"]
   :jvm-opts ["-Xmx1g"]
   )
