@@ -6,4 +6,5 @@ public interface Notify {
 	public void setSave(boolean b);
 	public void setVolume(double d);
 	public void setTempMute(boolean mute);
+	public void setBoost (boolean boost);
 }

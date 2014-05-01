@@ -48,7 +48,7 @@ public class MainFrame extends JFrame {
 			public void setPlay(boolean b) {}
 			public void setSave(boolean b) {}
 			public void setVolume(double d) {}
-			public double getVolume() {return 0.8;}
+			public void setBoost(boolean boost) {}
 		};
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
@@ -117,6 +117,14 @@ public class MainFrame extends JFrame {
 			}
 		});
 		
+		final JCheckBox chckbxBoostBass = new JCheckBox("Boost Bass");
+		chckbxBoostBass.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				notify.setBoost(chckbxBoostBass.isSelected());
+			}
+		});
+		chckbxBoostBass.setSelected(true);
+		
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
@@ -130,8 +138,9 @@ public class MainFrame extends JFrame {
 							.addComponent(slider, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
 						.addComponent(lblNewLabel)
 						.addComponent(chckbxSaveSong)
-						.addComponent(chckbxMuteUntilNext))
-					.addContainerGap(306, Short.MAX_VALUE))
+						.addComponent(chckbxMuteUntilNext)
+						.addComponent(chckbxBoostBass))
+					.addContainerGap(271, Short.MAX_VALUE))
 		);
 		gl_contentPane.setVerticalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
@@ -148,7 +157,9 @@ public class MainFrame extends JFrame {
 					.addComponent(chckbxSaveSong)
 					.addPreferredGap(ComponentPlacement.RELATED)
 					.addComponent(chckbxMuteUntilNext)
-					.addContainerGap(78, Short.MAX_VALUE))
+					.addPreferredGap(ComponentPlacement.RELATED)
+					.addComponent(chckbxBoostBass)
+					.addContainerGap(49, Short.MAX_VALUE))
 		);
 		contentPane.setLayout(gl_contentPane);
 	}

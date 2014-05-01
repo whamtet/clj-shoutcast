@@ -6,6 +6,7 @@
  (:import java.net.URL))
 
 (def url (URL. "http://server1.chilltrax.com:9000/"))
+(def urls [url])
 
 (def songs-dir (java.io.File. "songs"))
 
@@ -46,11 +47,15 @@
       ]
   song)
 
-(defn -main [& args]
+(defn -main [& [url-index]]
   (let [
+        url-index (if url-index
+                    (try (Integer/parseInt url-index) (catch NumberFormatException e 0))
+                    0)
+        url (nth urls url-index)
         player (core/get-player)
         ]
-    (doto player (.open url) .play (.setGain 0.2) core/boost-bass)
+    (doto player (.open url) .play (.setGain 0.2) (core/boost-bass true))
     (println "playing...")
     (while true
       (print "=>")

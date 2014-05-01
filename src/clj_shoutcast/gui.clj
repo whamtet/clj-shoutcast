@@ -28,6 +28,7 @@
       (.setMute player (not play?)))
     (setSave [_ save?] (reset! recorder/save? save?))
     (setVolume [_ volume] (.setGain player volume))
+    (setBoost [_ boost?] (core/boost-bass player boost?))
     ))
 
 (def url (URL. "http://server1.chilltrax.com:9000/"))
@@ -41,5 +42,5 @@
         ]
     (reset! ui-ref ui)
     (.setVisible ui true)
-    (doto player (.open url) .play (.setGain init-volume) core/boost-bass)
+    (doto player (.open url) .play (.setGain init-volume) (core/boost-bass true))
   ))

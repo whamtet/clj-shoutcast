@@ -119,10 +119,10 @@
      )
     (.addBasicPlayerListener recorder/recorder)))
 
-(defn boost-bass [player]
+(defn boost-bass [player boost?]
   (let [
         eq (.getEQ player)
-        f #(- 0.3 (* % 0.03))
+        f (if boost? #(- 0.3 (* % 0.03)) #(* % 0))
         ]
     (doseq [i (range 10)]
       (.setBandValue eq i 0 (f i))
