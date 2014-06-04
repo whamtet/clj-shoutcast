@@ -14,7 +14,9 @@
    javax.sound.sampled.AudioSystem
    javazoom.spi.mpeg.sampled.file.tag.TagParseListener
    )
-  (:require [clj-shoutcast.recorder :as recorder]))
+  (:require [clj-shoutcast.recorder :as recorder]
+            [clj-shoutcast.blacklist :as blacklist]
+            ))
 
 (def url (URL. "http://server1.chilltrax.com:9000/"))
 (def icy-header (slurp "header.txt"))
@@ -62,7 +64,7 @@
     :OGG_VORBIS (.getAudioFileFormat (VorbisAudioFileReader.) in)
     :NATIVE_MP3 (.getAudioFileFormat (MpegAudioFileReader.) in)
     (AudioSystem/getAudioFileFormat in)
-  ))
+    ))
 
 
 (defn audio-input-stream [in file-type]
@@ -73,50 +75,51 @@
     :OGG_VORBIS (.getAudioInputStream (VorbisAudioFileReader.) in)
     :NATIVE_MP3 (.getAudioInputStream (MpegAudioFileReader.) in)
     (AudioSystem/getAudioInputStream in)
-  ))
+    ))
 
 (defn workaround [url]
   (let [
-       socket (Socket. (.getHost url) (.getPort url))
-       os (.getOutputStream socket)
-       _ (.write os (.getBytes icy-header))
-       buffered-input-stream (BufferedInputStream. (.getInputStream socket))
-       stream (IcyInputStream. buffered-input-stream)
-       mime (-> stream (.getTag "content-type") .getValue)
-       stream-format (or (mime->format mime) (check-file-ending url))
-       forced-format (read-and-reset buffered-input-stream 1000
-                                     (fn [in] (audio-file-format in stream-format)))
-       ]
+        socket (Socket. (.getHost url) (.getPort url))
+        os (.getOutputStream socket)
+        _ (.write os (.getBytes icy-header))
+        buffered-input-stream (BufferedInputStream. (.getInputStream socket))
+        stream (IcyInputStream. buffered-input-stream)
+        mime (-> stream (.getTag "content-type") .getValue)
+        stream-format (or (mime->format mime) (check-file-ending url))
+        forced-format (read-and-reset buffered-input-stream 1000
+                                      (fn [in] (audio-file-format in stream-format)))
+        ]
     {:in (audio-input-stream stream stream-format) :format forced-format
      :iis stream}
     ))
 
-(defn print-tag-parse-event [tag-parse-event]
-  (let [
-        t (.getTag tag-parse-event)
-        ]
-    (println (str (.getName t) ": " (.getValue t)))))
+(defn timestamp []
+  (-> (java.util.Date.) .getTime java.sql.Timestamp. str (.split " ") second (.split "\\.") first))
 
 (def hard-mute? (atom false))
 
 (defn tag-parse-listener [player]
   (reify TagParseListener
     (tagParsed [this tag-parse-event]
-      (if-not @hard-mute? (.setMute player false))
-      (print-tag-parse-event tag-parse-event))))
+               (let [
+                     t (.getTag tag-parse-event)
+                     ]
+                 (when (= (.getName t) "StreamTitle")
+                   (if-not (and @hard-mute? (blacklist/blacklisted? (.getValue t))) (.setMute player false))
+                   (println (timestamp) (str (.getName t) ": " (.getValue t))))))))
 
 (defn get-player [& tag-listeners]
   (doto
-  (proxy [BasicPlayer] []
-    (initAudioInputStream
-     [url]
-      (let [{:keys [in format iis]} (workaround url)]
-        (.addTagParseListener iis (tag-parse-listener this))
-        (.addTagParseListener iis (recorder/tag-parse-listener this))
-        (doseq [tag-listener tag-listeners]
-          (.addTagParseListener iis tag-listener))
-        (proxy-super setDouble in format)))
-     )
+    (proxy [BasicPlayer] []
+      (initAudioInputStream
+       [url]
+       (let [{:keys [in format iis]} (workaround url)]
+         (.addTagParseListener iis (tag-parse-listener this))
+         (.addTagParseListener iis (recorder/tag-parse-listener this))
+         (doseq [tag-listener tag-listeners]
+           (.addTagParseListener iis tag-listener))
+         (proxy-super setDouble in format)))
+      )
     (.addBasicPlayerListener recorder/recorder)))
 
 (defn boost-bass [player boost?]

@@ -1,6 +1,7 @@
 (ns clj-shoutcast.ui
  (:require [clj-shoutcast.core :as core]
            [clj-shoutcast.recorder :as recorder]
+           [clj-shoutcast.blacklist :as blacklist]
            [clojure.java.shell :as shell]
            )
  (:import java.net.URL))
@@ -29,10 +30,15 @@
       (if-let [song (get-song prefix)] (shell/sh "open" (.getPath song)))
       (apply shell/sh (open-all-cmd)))))
 
-(defn ls []
+(defn ls [input]
+  (let [
+        prefix (second (.split input " "))
+        songs (map #(.getName %) (get-songs))
+        songs (if prefix (filter #(.contains (.toLowerCase %) (.toLowerCase prefix)) songs) songs)
+        ]
   (println "***saved songs***")
-  (println (apply str (interpose "\n" (map #(.getName %) (get-songs)))))
-  (println "***"))
+  (println (apply str (interpose "\n" songs)))
+  (println "***")))
 
 (defn rm [command]
   (when-let [song (get-song (second (.split command " ")))]
@@ -40,12 +46,18 @@
     (.flush *out*)
     (if (= "y" (.trim (read-line))) (.delete song))))
 
-(let [
-      command "rm A"
-      [_ prefix] (.split command " ")
-      song (get-song prefix)
-      ]
-  song)
+(defn save []
+  (if (.exists (java.io.File. (str @recorder/curr-name ".wav")))
+    (println "file exists already! We'll save anyway...")
+    (println "saving..."))
+  (reset! recorder/save? true))
+
+(defn blacklist! [player]
+  (println "blacklisting" @recorder/curr-name)
+  (blacklist/blacklist! @recorder/curr-name)
+  (.toggleMute player)
+  (reset! core/hard-mute? false)
+  )
 
 (defn -main [& [url-index]]
   (let [
@@ -71,12 +83,14 @@
             "r" (.resume player)
             "p" (.pause player)
             "m" (do (.toggleMute player) (reset! core/hard-mute? false))
-            "save" (do (println "saving...") (reset! recorder/save? true))
+            "save" (save)
             "cancel" (do (println "cancelling save...") (reset! recorder/save? false))
             "size" (-> recorder/os .size println)
-            "ls" (ls)
+            "commands" (println "r p m save cancel size ls rm open")
+            "blacklist" (blacklist! player)
             (condp starts-with? input
               "rm" (rm input)
+              "ls" (ls input)
               "open" (open input player)
               (println "command not recognized"))
             ))))))
