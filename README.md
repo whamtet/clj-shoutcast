@@ -6,6 +6,10 @@ Another popular internet radio format similar to Shoutcast is called Icyformat, 
 
 Be careful not to touch the sample http header in header.txt, Shoutcast servers will fail if you omit just one trailing \r\n.
 
+## Installation
+
+The deps are on the custom repo, so it should install fine
+
 ## Usage
 
 To run the player cd into source directory and use
