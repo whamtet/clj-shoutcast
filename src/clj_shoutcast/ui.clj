@@ -67,7 +67,7 @@
         url (nth urls url-index)
         player (core/get-player)
         ]
-    (doto player (.open url) .play (.setGain 0.2) (core/boost-bass true))
+    (doto player (.open url) .play (.setGain 0.2) #_(core/boost-bass true))
     (println "playing...")
     (while true
       (print "=>")
